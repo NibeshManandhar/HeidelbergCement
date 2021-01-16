@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeidelbergCement", "HeidelbergCement\HeidelbergCement.csproj", "{EDFEBDB3-43CC-490A-AA99-307C91D1EAB2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EDFEBDB3-43CC-490A-AA99-307C91D1EAB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDFEBDB3-43CC-490A-AA99-307C91D1EAB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDFEBDB3-43CC-490A-AA99-307C91D1EAB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDFEBDB3-43CC-490A-AA99-307C91D1EAB2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7B8850A9-7A40-4404-AE56-F72017FD43F4}
+	EndGlobalSection
+EndGlobal
