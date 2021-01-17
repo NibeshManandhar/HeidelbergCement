@@ -1,5 +1,6 @@
 ﻿using AirtableApiClient;
 using HeidelbergCement.Model;
+using HeidelbergCement.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,37 +12,82 @@ namespace HeidelbergCement.Service.LogService
 {
     public class LogService : ILogService
     {
-        readonly string baseId = "appD1b1YjWoXkUJwR";
-        readonly string appKey;
-
         private readonly ILogger<LogService> logger;
-        private readonly IConfiguration configuration;
 
-        public LogService(ILogger<LogService> logger, IConfiguration configuration)
+        private readonly IAirtableRepository airtableRepo;
+        public LogService(ILogger<LogService> logger, IAirtableRepository airtableRepo)
         {
             this.logger = logger;
-            this.configuration = configuration;            
-            this.appKey = configuration.GetValue<string>("appKey");
+            this.airtableRepo = airtableRepo;
         }
 
-        public async Task<List<LogMessage>> ListAllLogs()
+        public async Task<ServiceResponse<List<LogMessage>>> ListAllLogs()
         {
-            List<LogMessage> returnLog = new List<LogMessage>();
-            using (AirtableBase airtableBase = new AirtableBase(appKey, baseId))
+            List<LogMessage> returnLogs = new List<LogMessage>();
+            string errorMessage = string.Empty;
+            var response = await airtableRepo.ListRecordsAsAsync();
+
+            if (response.Success)
             {
-
-                Task<AirtableListRecordsResponse> task = airtableBase.ListRecords("Messages");
-
-                AirtableListRecordsResponse response = await task;
-                string errorMessage = string.Empty;
-                if (response.Success)
+                response?.Records?.ToList().ForEach(x =>
                 {
-                    response.Records.ToList().ForEach(x =>
-                    {
-                        returnLog.Add(ExtractFromAirTabelRecord(x));
-                    });
-                }
-                else if (response.AirtableApiError is AirtableApiException)
+                    returnLogs.Add(ExtractFromAirTabelRecord(x));
+                });
+
+            }
+            else if (response.AirtableApiError is AirtableApiException)
+            {
+                errorMessage = response.AirtableApiError.ErrorMessage;
+            }
+            else
+            {
+                errorMessage = "Unknown error";
+            }
+            ServiceResponse<List<LogMessage>> resp = null;
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                resp = new ServiceResponse<List<LogMessage>>()
+                {
+                    Data = null,
+                    Sucess = false,
+                    Message = errorMessage
+                };
+
+            }
+            else
+            {
+                resp = new ServiceResponse<List<LogMessage>>()
+                {
+                    Data = returnLogs
+                };                
+            }
+
+            return resp;
+        }
+
+        public LogMessage ExtractFromAirTabelRecord(AirtableRecord record)
+        {
+            LogMessage logMessage = new LogMessage();
+            if (record == null)
+                return null;
+            if (record.Fields.ContainsKey("Summary"))
+                logMessage.Title = record.Fields["Summary"] as string;
+            if (record.Fields.ContainsKey("Message"))
+                logMessage.Text = record.Fields["Message"] as string;
+            return logMessage;
+        }
+
+
+        public async Task<ServiceResponse<LogMessage>> WriteLog(LogMessage msg)
+        {
+            ServiceResponse<LogMessage> resp = null;
+
+            var response = await airtableRepo.CreateRecordAsAsync(msg);
+
+            if (!response.Success)
+            {
+                string errorMessage = null;
+                if (response.AirtableApiError is AirtableApiException)
                 {
                     errorMessage = response.AirtableApiError.ErrorMessage;
                 }
@@ -49,64 +95,26 @@ namespace HeidelbergCement.Service.LogService
                 {
                     errorMessage = "Unknown error";
                 }
-                return returnLog;
+
+                logger.LogError(errorMessage, response.AirtableApiError);
+                resp = new ServiceResponse<LogMessage>()
+                {
+                    Data = null,
+                    Sucess = false,
+                    Message = errorMessage
+                };
             }
-
-
-
-            // if (!string.IsNullOrEmpty(errorMessage))
-            // {
-            //     new List<LogMessage>();
-            // }
-            // else
-            // {
-            //     return returnLog;
-            // }
-        }
-
-        private LogMessage ExtractFromAirTabelRecord(AirtableRecord record)
-        {
-            LogMessage logMessage = new LogMessage();
-            if (record.Fields.ContainsKey("Summary"))
-                logMessage.Text = record.Fields["Summary"] as string;
-            if (record.Fields.ContainsKey("Message"))
-                logMessage.Title = record.Fields["Message"] as string;
-            return logMessage;
-
-        }
-
-
-        public async Task<bool> WriteLog(LogMessage msg)
-        {
-            using (AirtableBase airtableBase = new AirtableBase(appKey, baseId))
+            else
             {
-                var fields = new Fields();
-                fields.AddField("Summary", msg.Title);
-                fields.AddField("Message", msg.Text);
-                Task<AirtableCreateUpdateReplaceRecordResponse> task = airtableBase.CreateRecord("Messages", fields, true);
-                var response = await task;
-
-                if (!response.Success)
+                var record = response.Record;
+                resp = new ServiceResponse<LogMessage>()
                 {
-                    string errorMessage = null;
-                    if (response.AirtableApiError is AirtableApiException)
-                    {
-                        errorMessage = response.AirtableApiError.ErrorMessage;
-                    }
-                    else
-                    {
-                        errorMessage = "Unknown error";
-                    }
-
-                    logger.LogError(errorMessage, response.AirtableApiError);
-                    return false;
-                }
-                else
-                {
-                    var record = response.Record;
-                    return true;
-                }
+                    Data = ExtractFromAirTabelRecord(record)
+                };
             }
+
+
+            return resp;
         }
 
     }

@@ -8,7 +8,7 @@ namespace HeidelbergCement.Service.LogService
 {
     public interface ILogService
     {
-        Task<bool> WriteLog(LogMessage msg);
-        Task<List<LogMessage>> ListAllLogs();
+        Task<ServiceResponse<LogMessage>> WriteLog(LogMessage msg);
+        Task<ServiceResponse<List<LogMessage>>> ListAllLogs();
     }
 }

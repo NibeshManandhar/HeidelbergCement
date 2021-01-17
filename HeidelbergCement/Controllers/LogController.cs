@@ -24,18 +24,22 @@ namespace HeidelbergCement.Controllers
         [HttpGet]
         public async Task<IActionResult> RetreiveAllLogs()
         {
-            return Ok(await logService.ListAllLogs());
+            var result = await logService.ListAllLogs();
+            if (result.Sucess)
+                return Ok(result.Data);
+            else
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
-
 
 
         [HttpPost]
         public async Task<IActionResult> WriteLog(LogMessage msg)
         {
-            if (await logService.WriteLog(msg))
-                return Ok("Create Message sucessfully");
+            var result = await logService.WriteLog(msg);
+            if (result.Sucess)
+                return Ok(result.Data);
             else
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 }

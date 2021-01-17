@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using HeidelbergCement.Model;
+using HeidelbergCement.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -18,14 +19,16 @@ namespace HeidelbergCement.Controllers
     public class TokenController : ControllerBase
     {
         public IConfiguration _configuration;
+        private readonly IUserRepository userRepo;
 
-        public TokenController(IConfiguration config)
+        public TokenController(IConfiguration config, IUserRepository userRepo)
         {
-            _configuration = config;            
+            _configuration = config;
+            this.userRepo = userRepo;
         }
 
         [HttpPost]        
-        public async Task<IActionResult> Post(User _userData)
+        public  IActionResult Post(User _userData)
         {
 
             if (_userData != null && _userData.Email != null && _userData.Password != null)
@@ -39,11 +42,7 @@ namespace HeidelbergCement.Controllers
                     new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                    new Claim("Email", user.Email.ToString()),                    
-                    //new Claim("FirstName", user.FirstName),
-                    //new Claim("LastName", user.LastName),
-                    //new Claim("UserName", user.UserName),
-                    //new Claim("Email", user.Email)
+                    new Claim("Email", user.Email.ToString())
                    };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -67,11 +66,10 @@ namespace HeidelbergCement.Controllers
 
         private User GetUser(string email, string password)
         {
-            if (email.ToLower().Equals("heidelbergcement@123.com") && password.Equals("2021@HeidelbergCement")) 
+            if (userRepo.GetUserByEmailAndPassWord(email, password) != null)
                 return new User { Email = email, Password = password };
             else
-                return null;
-            //return await _context.UserInfo.FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
+                return null;            
         }
 
 

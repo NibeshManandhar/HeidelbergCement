@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using HeidelbergCement.Repository;
 
 namespace HeidelbergCement
 {
@@ -32,6 +33,8 @@ namespace HeidelbergCement
         {
             var appKey = Configuration.GetConnectionString("appKey");
             services.AddScoped<ILogService, LogService>();
+            services.AddScoped<IUserRepository, FakeUserRepository>();
+            services.AddScoped<IAirtableRepository, AirtableRepository>();
             services.AddControllers();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(option =>
                 {
