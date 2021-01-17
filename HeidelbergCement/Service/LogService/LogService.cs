@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HeidelbergCement.HelperClass;
 
 namespace HeidelbergCement.Service.LogService
 {
@@ -21,6 +22,10 @@ namespace HeidelbergCement.Service.LogService
             this.airtableRepo = airtableRepo;
         }
 
+        /// <summary>
+        /// Service to List all messages
+        /// </summary>
+        /// <returns></returns>
         public async Task<ServiceResponse<List<LogMessage>>> ListAllLogs()
         {
             List<LogMessage> returnLogs = new List<LogMessage>();
@@ -29,9 +34,10 @@ namespace HeidelbergCement.Service.LogService
 
             if (response.Success)
             {
+                //List through all Airtable Records object and create LogMessage Object list
                 response?.Records?.ToList().ForEach(x =>
                 {
-                    returnLogs.Add(ExtractFromAirTabelRecord(x));
+                    returnLogs.Add(ExtractLogMessageFromAirTabelRecord(x));
                 });
 
             }
@@ -65,19 +71,33 @@ namespace HeidelbergCement.Service.LogService
             return resp;
         }
 
-        public LogMessage ExtractFromAirTabelRecord(AirtableRecord record)
+        /// <summary>
+        /// AirtableRecord to LogMessage Object
+        /// </summary>
+        /// <param name="record"></param>
+        /// <returns></returns>
+        public LogMessage ExtractLogMessageFromAirTabelRecord(AirtableRecord record)
         {
             LogMessage logMessage = new LogMessage();
             if (record == null)
                 return null;
-            if (record.Fields.ContainsKey("Summary"))
-                logMessage.Title = record.Fields["Summary"] as string;
-            if (record.Fields.ContainsKey("Message"))
-                logMessage.Text = record.Fields["Message"] as string;
+            if (record.Fields.ContainsKey(Constants.ID))
+                logMessage.Id = record.Fields[Constants.ID] as string;
+            if (record.Fields.ContainsKey(Constants.SUMMARY))
+                logMessage.Title = record.Fields[Constants.SUMMARY] as string;
+            if (record.Fields.ContainsKey(Constants.MESSAGE))
+                logMessage.Text = record.Fields[Constants.MESSAGE] as string;
+            if (record.Fields.ContainsKey(Constants.RECEIVEDAT))
+                logMessage.ReceivedAt = record.Fields[Constants.RECEIVEDAT] as DateTime?;            
             return logMessage;
         }
 
 
+        /// <summary>
+        /// Service to Create Message:
+        /// </summary>
+        /// <param name="msg">Parsed JSON object from  Body with two attributes "title" and “text"</param>
+        /// <returns></returns>
         public async Task<ServiceResponse<LogMessage>> WriteLog(LogMessage msg)
         {
             ServiceResponse<LogMessage> resp = null;
@@ -109,7 +129,7 @@ namespace HeidelbergCement.Service.LogService
                 var record = response.Record;
                 resp = new ServiceResponse<LogMessage>()
                 {
-                    Data = ExtractFromAirTabelRecord(record)
+                    Data = ExtractLogMessageFromAirTabelRecord(record)
                 };
             }
 

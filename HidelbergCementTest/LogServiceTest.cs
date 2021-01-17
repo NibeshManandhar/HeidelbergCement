@@ -1,4 +1,5 @@
 using AirtableApiClient;
+using HeidelbergCement.HelperClass;
 using HeidelbergCement.Model;
 using HeidelbergCement.Repository;
 using HeidelbergCement.Service.LogService;
@@ -113,16 +114,19 @@ namespace HidelbergCementTest
         {
             //Arrange
             AirtableRecord airtableRecord = new AirtableRecord();
-            airtableRecord.Fields.Add("Summary", "Test Title");
-            airtableRecord.Fields.Add("Message", "This is test Message");
+            airtableRecord.Fields.Add(Constants.ID, "Test ID");
+            airtableRecord.Fields.Add(Constants.SUMMARY, "Test Title");
+            airtableRecord.Fields.Add(Constants.MESSAGE, "This is test Message");
+            airtableRecord.Fields.Add(Constants.RECEIVEDAT, DateTime.Now);
 
             //Act
-            LogMessage result = _sut.ExtractFromAirTabelRecord(airtableRecord);
+            LogMessage result = _sut.ExtractLogMessageFromAirTabelRecord(airtableRecord);
 
             //Assert            
-            Assert.Equal(result.Title, airtableRecord.Fields["Summary"]);
-            Assert.Equal(result.Text, airtableRecord.Fields["Message"]);
-
+            Assert.Equal(result.Id, airtableRecord.Fields[Constants.ID]);
+            Assert.Equal(result.Title, airtableRecord.Fields[Constants.SUMMARY]);
+            Assert.Equal(result.Text, airtableRecord.Fields[Constants.MESSAGE]);
+            Assert.Equal(result.ReceivedAt, airtableRecord.Fields[Constants.RECEIVEDAT]);
         }
     }
 }

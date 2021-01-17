@@ -1,4 +1,5 @@
 ﻿using AirtableApiClient;
+using HeidelbergCement.HelperClass;
 using HeidelbergCement.Model;
 using HeidelbergCement.Service.LogService;
 using Microsoft.Extensions.Configuration;
@@ -32,8 +33,10 @@ namespace HeidelbergCement.Repository
             using (AirtableBase airtableBase = new AirtableBase(appKey, baseId))
             {
                 var fields = new Fields();
-                fields.AddField("Summary", msg.Title);
-                fields.AddField("Message", msg.Text);
+                fields.AddField(Constants.ID, msg.Id);
+                fields.AddField(Constants.SUMMARY, msg.Title);
+                fields.AddField(Constants.MESSAGE, msg.Text);
+                fields.AddField(Constants.RECEIVEDAT, msg.ReceivedAt);
                 Task<AirtableCreateUpdateReplaceRecordResponse> task = airtableBase.CreateRecord("Messages", fields, true);
                 response = await task;               
             }

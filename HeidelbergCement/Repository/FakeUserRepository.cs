@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace HeidelbergCement.Repository
 {
+    /// <summary>
+    /// User not saved in Database, rather used from memory for demo porpose
+    /// </summary>
     public class FakeUserRepository : IUserRepository
     { 
         private static List<User> Users= new List<User>();
